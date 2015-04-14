@@ -84,10 +84,10 @@ def segment_image(segtype, save_img, (img, path)):
 
         if segtype == SegType.FW:
           segments = felzenszwalb(img, scale=scale, sigma=sigma, min_size=min_size)
-          segnum  = len(np.unique(segments))
         else:
           segments = slic(img, n_segments=min_size, compactness=scale, sigma=sigma)
-          segnum  = len(np.unique(segments))
+        
+        segnum  = len(np.unique(segments))
 
         if verbose:
           logger.info('{0}: num of segments = {1}'.format(str(segtype), segnum))
