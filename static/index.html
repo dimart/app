@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Automatic Photo Pop-Up</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <div id="ui">
+        <h1>Scene Labeling</h1>
+        <hr class="separator">
+        <label>Actions</label>
+        <div id="brawse-images" class="button">&emsp;Brawse images</div>
+        <div id="label-image" class="button">&emsp;Upload image</div>
+        <div id="send-result" class="button-disabled">&emsp;Send result</div>
+        <label>Labels</label>
+        <div id="legend">
+            <div id="sky-lab" , class="button">
+                <span class="legend-color-box" style="background-color: rgb(0, 0, 255)"></span>&emsp;Sky
+            </div>
+            <div id="vertical-lab" , class="button">
+                <span class="legend-color-box" style="background-color: rgb(255, 0, 0)"></span>&emsp;Vertical
+            </div>
+            <div id="ground-lab" , class="button">
+                <span class="legend-color-box" style="background-color: rgb(0, 255, 0)"></span>&emsp;Ground
+            </div>
+        </div>
+        <label>Views</label>
+        <div id="image-view" class="button">
+            <i class="fa fa-fw fa-file-image-o"> </i>&emsp;Image
+        </div>
+        <div id="boundary-view" class="button">
+            <i class="fa fa-fw fa-connectdevelop"> </i>&emsp;Boundary
+        </div>
+        <div id="fill-view" class="button">
+            <i class="fa fa-fw fa-puzzle-piece"> </i>&emsp;Fill
+        </div>
+    </div>
+    <div id="workspace">
+        <div id="annotator-container"></div>
+        <div id="loading" class="panel">
+            <span><i class="fa fa-cog fa-spin"></i>&emsp;Loading</span>
+        </div>
+        <div id="brawser"></div>
+    </div>
+    <script src="js/libs/jquery-2.1.3.min.js"></script>
+    <script src="js/segment-annotator.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

@@ -46,7 +46,7 @@ mins = range(10, 101, 30)
 
 class SegType:
     FW = "Felzenszwalb"
-    SLICK = "SLIC"
+    SLIC = "SLIC"
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -75,12 +75,22 @@ def make_full_path(path, subfolders):
       os.makedirs(res_path)
   return res_path
 
+def segment(img):
+  w, h = img.shape[0:2]
+  segSize = 50
+  nSegX = int(w / segSize)
+  nSegY = int(h / segSize)
+  nSeg  = int(nSegX * nSegY) 
+  return slic(img, n_segments=nSeg, 
+                   compactness=segSize, 
+                   sigma=0.5,
+                   convert2lab=True)
+
 def segment_image(segtype, save_img, (img, path)):
   logger.info('Process image: {0}'.format(path))
   for scale in scales:
     for sigma in sigmas:
       for min_size in mins:
-        fpath = make_full_path(path, [segtype, scale, sigma])
 
         if segtype == SegType.FW:
           segments = felzenszwalb(img, scale=scale, sigma=sigma, min_size=min_size)
@@ -92,7 +102,8 @@ def segment_image(segtype, save_img, (img, path)):
         if verbose:
           logger.info('{0}: num of segments = {1}'.format(str(segtype), segnum))
         
-        if (save_img == True):
+        if (save_img and path):
+          fpath = make_full_path(path, [segtype, scale, sigma])
           fname = fpath \
                   + '/' \
                   + "ms=" + str(min_size) \
@@ -144,7 +155,7 @@ def main(argv):
 
   args = parse_args()
   inpath, outpath, verbose = args.i, args.o, args.verbose
-  segtype = SegType.FW if args.segtype == 'F' else SegType.SLICK
+  segtype = SegType.FW if args.segtype == 'F' else SegType.SLIC
 
   if (args.p != None):
     logger.info('Running in multiple processes mode with number of processes = {0}'.format(args.p))
