@@ -3,12 +3,13 @@ from werkzeug import secure_filename
 
 from skimage import io
 from scripts.segment import segment, SegType
+from scripts.util import save_img_mdata, add_lab_mdata
 import numpy as np
 
 import os, uuid
 
 UPLOAD_FOLDER = './uploads'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
 app = Flask(__name__, static_url_path='')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -33,15 +34,14 @@ def send_images():
 @app.route('/api/1.0/send_labels', methods=['POST'])
 def process_labels():
     jfile = request.json
+
     fname = str(uuid.uuid5(uuid.NAMESPACE_DNS, secure_filename(jfile['imageName'])))
-    pathToImg = os.path.join(app.config['UPLOAD_FOLDER'], "images", fname)
-    if (not os.path.isfile(pathToImg)):
+    path  = os.path.join(app.config['UPLOAD_FOLDER'], fname)
+    if (not os.path.isfile(path)):
         abort(404)
 
-    pathToLabels = os.path.join(app.config['UPLOAD_FOLDER'], "labels", fname) + '.lab'
-    with open(pathToLabels, 'w') as file_:
-        file_.write(str(jfile["labels"]))
-
+    labs = np.array(jfile["labels"])
+    add_lab_mdata(path, labs)
     return "Success", 200
 
 # Route that will process the AJAX request,
@@ -52,25 +52,24 @@ def process_image():
     file = request.files['file']
 
     if not file and not allowed_file(file.filename):
-        return jsonify(error="Not allowed file format.")
+        return jsonify(error="Not allowed file format")
 
-    # Save file on the server
     filename = str(uuid.uuid5(uuid.NAMESPACE_DNS, secure_filename(file.filename)))
-    path = os.path.join(app.config['UPLOAD_FOLDER'], "images", filename)
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename);
     # if (os.path.isfile(fname)):
-
-    file.save(path)
+    file.save(path + '_temp')
     file.close()
 
     # Segment the image
-    img      = io.imread(path)
+    img      = io.imread(path + '_temp')
     segments = segment(img)
     segnum   = len(np.unique(segments))
 
+    os.remove(path + '_temp')
+    save_img_mdata(path, img, segments, segnum)
+
     fseg      = segments.flatten().tolist()
     h, w, nc  = img.shape
-
-    print w, h
 
     alpha = np.zeros(w * h).reshape(h, w)
     imgData = np.dstack((img, alpha)).flatten().tolist()
@@ -80,5 +79,7 @@ def process_image():
                    rgbData = imgData)
 
 if __name__ == '__main__':
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
     # app.run(host="0.0.0.0")
     app.run(debug=True)

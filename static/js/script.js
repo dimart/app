@@ -28,10 +28,10 @@ function createToggleButton(button, disableCallback, enableCallback) {
     button.addEventListener('click', function() {
         if (enabled) {
             disableCallback();
-            button.classList.add('disabled');
+            button.classList.remove('enabled');
         } else {
             enableCallback();
-            button.classList.remove('disabled');
+            button.classList.add('enabled');
         }
         enabled = !enabled;
     });
@@ -42,11 +42,11 @@ function initializeLegend(annotator) {
     // Attach a click event to a legend item.
     function attachClickEvent(item, i) {
         item.addEventListener('click', function() {
-            var selected = document.getElementsByClassName('legend-selected')[0];
+            var selected = document.getElementsByClassName('enabled')[0];
             if (selected)
-                selected.classList.remove('legend-selected');
+                selected.classList.remove('enabled');
             annotator.setCurrentLabel(i);
-            this.classList.add('legend-selected');
+            this.classList.add('enabled');
         });
     }
     var labels = annotator.getLabels();
@@ -63,9 +63,6 @@ function initializeLegend(annotator) {
 
 // Attach button events
 function initializeButtons(annotator) {
-    var fillAlpha = 128;
-    var boundaryEnabled = true;
-
     createToggleButton(document.getElementById('image-view'),
         function() {
             annotator.setImageAlpha(0);
@@ -76,28 +73,18 @@ function initializeButtons(annotator) {
 
     createToggleButton(document.getElementById('boundary-view'),
         function() {
-            annotator.setBoundaryAlpha(fillAlpha);
-            boundaryEnabled = !boundaryEnabled;
+            annotator.setBoundaryAlpha(0);
         },
         function() {
-            if (fillAlpha === 128)
-                annotator.setBoundaryAlpha(192);
-            boundaryEnabled = !boundaryEnabled;
+            annotator.setBoundaryAlpha(192);
         });
 
     createToggleButton(document.getElementById('fill-view'),
         function() {
-            fillAlpha = 0;
-            annotator.setFillAlpha(fillAlpha);
-            annotator.setBoundaryAlpha(fillAlpha);
+            annotator.setFillAlpha(0);
         },
         function() {
-            fillAlpha = 128;
-            annotator.setFillAlpha(fillAlpha);
-            if (boundaryEnabled)
-                annotator.setBoundaryAlpha(192);
-            else
-                annotator.setBoundaryAlpha(fillAlpha);
+            annotator.setFillAlpha(128);
         });
 
     annotator.setImageAlpha(255);
@@ -122,7 +109,16 @@ function initSegmentAnnotator(segmentation) {
         onload: function() {
             initializeLegend(this);
             initializeButtons(this);
+
             $("#loading").fadeOut("fast");
+
+            document.getElementById('image-view').className = "button enabled";
+            document.getElementById('boundary-view').className = "button enabled";
+            document.getElementById('fill-view').className = "button enabled";
+
+            document.getElementById('sky-lab').className = "button";
+            document.getElementById('vertical-lab').className = "button";
+            document.getElementById('ground-lab').className = "button enabled";
         }
     };
     SegmentAnnotator.call(Object.create(SegmentAnnotator.prototype), segmentation, options);
@@ -166,13 +162,12 @@ window.onload = function() {
         }
     });
 
-    document.getElementById('brawse-images').onclick = function() {
-        // $.ajax({
-        //     url: "/api/1.0/get_images",
-        //     type: "GET",
-        //     success: displayImages
-        // });
-
-        displayMessage("Not available", false);
-    };
+    // document.getElementById('brawse-images').onclick = function() {
+    //     $.ajax({
+    //         url: "/api/1.0/get_images",
+    //         type: "GET",
+    //         success: displayImages
+    //     });
+    //     displayMessage("Not available", false);
+    // };
 };
