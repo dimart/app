@@ -77,7 +77,7 @@ def make_full_path(path, subfolders):
 
 def segment(img):
   h, w = img.shape[0:2]
-  segSize = 40
+  segSize = 30
   nSegX = int(w / segSize)
   nSegY = int(h / segSize)
   nSeg  = int(nSegX * nSegY) 

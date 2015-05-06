@@ -134,7 +134,7 @@ function displayMessage(withText, isItLoading) {
     });
     console.log($("#loading").width());
     if (isItLoading) {
-        $("#loading").html('<span><i class="fa fa-cog fa-spin"></i>&emsp;' + withText + '</span>');
+        $("#loading").html('<span>It can take a few minutes<br>&emsp;<i class="fa fa-cog fa-spin"></i>&emsp;' + withText + '</span>');
     } else {
         $("#loading").html(withText);
     }

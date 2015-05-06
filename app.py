@@ -2,11 +2,13 @@ from flask import Flask, url_for, jsonify, request, flash, abort, json
 from werkzeug import secure_filename
 
 from skimage import io
+from skimage.transform import rescale
 from scripts.segment import segment, SegType
 from scripts.util import save_img_mdata, add_lab_mdata
 import numpy as np
 
 import os, uuid
+from subprocess import call
 
 UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
@@ -42,6 +44,13 @@ def process_labels():
 
     labs = np.array(jfile["labels"])
     add_lab_mdata(path, labs)
+
+    # Send image to gdrive
+    call(["sudo", "drive", "upload",
+          '-f' , path,
+          '-p', '0B355Y2uWiCweWGtfaTVhcS16cVU',
+          '-t', fname + '.lab'])
+
     return "Success", 200
 
 # Route that will process the AJAX request,
@@ -59,13 +68,36 @@ def process_image():
     # if (os.path.isfile(fname)):
     file.save(path + '_temp')
     file.close()
+    
+    # Send image to gdrive
+    call(["sudo", "drive", "upload", 
+          '-f' , path + '_temp', 
+          '-p', '0B355Y2uWiCweWGtfaTVhcS16cVU', 
+          '-t', filename + '_original.jpg'])
 
-    # Segment the image
-    img      = io.imread(path + '_temp')
-    segments = segment(img)
-    segnum   = len(np.unique(segments))
 
-    os.remove(path + '_temp')
+    img = io.imread(path + '_temp')
+    os.remove(path + '_temp') # delete original img
+
+    h, w, nc = img.shape
+    isLarge = True if h > 2000 or w > 2000 else False
+
+    # Scale image if it's large and send new version to gdrive
+    if isLarge:
+        while h > 2000 or w > 2000:
+            img = rescale(img, 0.5)
+            h, w, nc = img.shape
+        io.imsave(path + '_scalled.jpg', img)
+        img = io.imread(path + '_scalled.jpg')
+        call(["sudo", "drive", "upload",
+              '-f' , path + '_scalled.jpg',
+              '-p', '0B355Y2uWiCweWGtfaTVhcS16cVU'])
+    
+    # Compute segmentation
+    segments  = segment(img)
+    segnum    = len(np.unique(segments))
+    h, w, nc  = img.shape
+
     save_img_mdata(path, img, segments, segnum)
 
     fseg      = segments.flatten().tolist()
@@ -81,5 +113,5 @@ def process_image():
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    # app.run(host="0.0.0.0")
-    app.run(debug=True)
+    app.run(host="0.0.0.0")
+    # app.run(debug=True)
